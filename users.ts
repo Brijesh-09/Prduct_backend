@@ -111,15 +111,15 @@ userRouter.put('/update_basicinfo', async (req, res) => {
     }
 });
 
-// Route to add Diet
-userRouter.post('add_diet' ,async (req , res) => {
-    const {username , meal , calories } = req.body;
-    try{
+// Route to add Diet here we can upload and retrive something like a pdf .
+userRouter.post('add_diet', async (req, res) => {
+    const { username, meal, calories } = req.body;
+    try {
         const user = await prisma.user.update({
             where: {
                 username: username
             },
-            select: {Email: true},
+            select: { Email: true },
             data: {
                 Diet: {
                     create: {
@@ -129,12 +129,45 @@ userRouter.post('add_diet' ,async (req , res) => {
                 }
             }
         });
-    }catch(error){  
+    } catch (error) {
         console.log(error);
     }
 })
 
 // Route to add Workout Plan
+userRouter.post('/add_workout', async (req, res) => {
+    const { username, type, workout } = req.body;
+
+    try {
+        // Find user
+        const user = await prisma.user.findUnique({
+            where: { username }
+        });
+
+        if (!user) {
+            res.status(404).json({ error: "User not found" }); // Return karo warna aage execute hoga
+        }
+
+        // Convert `String` to `string` explicitly
+        const userId = String(user?.Email); // 🟢 FIXED: Type properly set ho jayega
+
+        // Create new workout entry
+        const newWorkout = await prisma.exercise.create({
+            data: {
+                userId, // ✅ Ab ye sahi hai
+                type,
+                workout,
+                duration: 30
+            }
+        });
+
+        res.json(newWorkout); // Sahi jagah response send karo
+    } catch (error) {
+        console.error("Error adding workout:", error);
+        res.status(500).json({ error: error }); // Proper error handling
+    }
+});
+
 
 
 export default userRouter;
